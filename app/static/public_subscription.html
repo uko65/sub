@@ -1,1 +1,206 @@
-<!-- Static HTML for public subscription form -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copy of Books on Wheels client Form</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Copy of Books on Wheels client Form</h4>
+                </div>
+                <div class="card-body">
+                    <form id="subscriptionForm">
+                        <div class="mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="+2507XXXXXXXX" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="child_name" class="form-label">Child Name</label>
+                            <input type="text" class="form-control" id="child_name" name="child_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="parent_name" class="form-label">Parent/Guardian Name</label>
+                            <input type="text" class="form-control" id="parent_name" name="parent_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="agreed_refused" class="form-label">Agreement</label>
+                            <select class="form-select" id="agreed_refused" name="agreed_refused" required>
+                                <option value="">Select...</option>
+                                <option value="Agreed">Agreed</option>
+                                <option value="Refused">Refused</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="package" class="form-label">Package</label>
+                            <select class="form-select" id="package" name="package" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="date_of_subscription" class="form-label">Date of Subscription</label>
+                            <input type="date" class="form-control" id="date_of_subscription" name="date_of_subscription" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="renew_subscription_by" class="form-label">Renew Subscription By</label>
+                            <input type="date" class="form-control" id="renew_subscription_by" name="renew_subscription_by" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_status" class="form-label">Payment Status</label>
+                            <select class="form-select" id="payment_status" name="payment_status" required>
+                                <option value="Pending" selected>Pending</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="area" class="form-label">District</label>
+                            <select class="form-select" id="area" name="area" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Sector</label>
+                            <select class="form-select" id="location" name="location" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cell" class="form-label">Cell (optional)</label>
+                            <select class="form-select" id="cell" name="cell">
+                                <option value="">Select cell (optional)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Submit Subscription</button>
+                    </form>
+                    <div id="formAlert" class="alert mt-3 d-none" role="alert"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const apiBase = '/api/public';
+
+// Populate packages
+fetch(`${apiBase}/packages`).then(r => r.json()).then(data => {
+    const pkgSel = document.getElementById('package');
+    if (data.packages) {
+        data.packages.forEach(pkg => {
+            const opt = document.createElement('option');
+            opt.value = pkg.name || pkg;
+            opt.textContent = pkg.name || pkg;
+            pkgSel.appendChild(opt);
+        });
+    }
+});
+
+// Populate districts
+fetch(`${apiBase}/districts`).then(r => r.json()).then(data => {
+    const areaSel = document.getElementById('area');
+    if (data.districts) {
+        data.districts.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            areaSel.appendChild(opt);
+        });
+    }
+});
+
+// Populate sectors when district changes
+document.getElementById('area').addEventListener('change', function() {
+    const district = this.value;
+    const locationSel = document.getElementById('location');
+    locationSel.innerHTML = '';
+    document.getElementById('cell').innerHTML = '<option value="">Select cell (optional)</option>';
+    if (!district) return;
+    fetch(`${apiBase}/sectors/${district}`).then(r => r.json()).then(data => {
+        if (data.sectors) {
+            data.sectors.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                locationSel.appendChild(opt);
+            });
+        }
+    });
+});
+
+// Populate cells when sector changes
+document.getElementById('location').addEventListener('change', function() {
+    const district = document.getElementById('area').value;
+    const sector = this.value;
+    const cellSel = document.getElementById('cell');
+    cellSel.innerHTML = '<option value="">Select cell (optional)</option>';
+    if (!district || !sector) return;
+    fetch(`${apiBase}/cells/${district}/${sector}`).then(r => r.json()).then(data => {
+        if (data.cells) {
+            data.cells.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                cellSel.appendChild(opt);
+            });
+        }
+    });
+});
+
+// Auto-calculate renew_subscription_by when date_of_subscription changes
+document.getElementById('date_of_subscription').addEventListener('change', function() {
+    const dateStr = this.value;
+    if (!dateStr) {
+        document.getElementById('renew_subscription_by').value = '';
+        return;
+    }
+    const date = new Date(dateStr);
+    date.setDate(date.getDate() + 30);
+    // Format as yyyy-mm-dd
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    document.getElementById('renew_subscription_by').value = `${yyyy}-${mm}-${dd}`;
+});
+
+// Handle form submission
+document.getElementById('subscriptionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form).entries());
+    // Remove empty cell
+    if (!data.cell) delete data.cell;
+    // Remove renew_subscription_by (let backend calculate), but keep payment_status
+    delete data.renew_subscription_by;
+    fetch(`${apiBase}/subscriptions`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(async r => {
+        const resp = await r.json();
+        const alert = document.getElementById('formAlert');
+        if (r.status === 201) {
+            alert.className = 'alert alert-success mt-3';
+            alert.textContent = 'Subscription created successfully!';
+            form.reset();
+            document.getElementById('renew_subscription_by').value = '';
+        } else {
+            alert.className = 'alert alert-danger mt-3';
+            alert.textContent = resp.message || 'Error creating subscription.';
+        }
+        alert.classList.remove('d-none');
+    })
+    .catch(() => {
+        const alert = document.getElementById('formAlert');
+        alert.className = 'alert alert-danger mt-3';
+        alert.textContent = 'Network or server error.';
+        alert.classList.remove('d-none');
+    });
+});
+</script>
+</body>
+</html>

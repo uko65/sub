@@ -322,75 +322,6 @@ subscription_search_spec = {
             "schema": {"$ref": "#/definitions/Error"}
         }
     }
-} "string",
-                        "minLength": 2,
-                        "maxLength": 100,
-                        "description": "Name of the child"
-                    },
-                    "parent_name": {
-                        "type": "string",
-                        "minLength": 2,
-                        "maxLength": 100,
-                        "description": "Name of the parent/guardian"
-                    },
-                    "agreed_refused": {
-                        "type": "string",
-                        "enum": ["Agreed", "Refused"],
-                        "description": "Subscription agreement status"
-                    },
-                    "package": {
-                        "type": "string",
-                        "description": "Name of the subscription package (must exist)"
-                    },
-                    "date_of_subscription": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "Subscription start date (YYYY-MM-DD)"
-                    },
-                    "area": {
-                        "type": "string",
-                        "enum": ["Gasabo", "Kicukiro", "Nyarugenge"],
-                        "description": "Kigali district"
-                    },
-                    "location": {
-                        "type": "string",
-                        "description": "Sector within the district"
-                    },
-                    "cell": {
-                        "type": "string",
-                        "description": "Cell within the sector (optional)"
-                    },
-                    "payment_status": {
-                        "type": "string",
-                        "enum": ["Pending", "Paid", "Failed"],
-                        "default": "Pending",
-                        "description": "Initial payment status"
-                    }
-                }
-            }
-        }
-    ],
-    "responses": {
-        "201": {
-            "description": "Subscription created successfully",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "success": {"type": "boolean"},
-                    "subscription_id": {"type": "string"}
-                }
-            }
-        },
-        "400": {
-            "description": "Bad request - Validation errors",
-            "schema": {"$ref": "#/definitions/Error"},
-            "examples": {
-                "application/json": {
-                    "message": "Invalid area. Must be one of: ['Gasabo', 'Kicukiro', 'Nyarugenge']"
-                }
-            }
-        }
-    }
 }
 
 subscription_list_spec = {
@@ -757,3 +688,36 @@ public_subscription_create_spec = {
                 }
             }
         }
+    ],
+
+    "responses": {
+        "201": {
+            "description": "Subscription created successfully",
+            "schema": {
+
+                "type": "object",
+                "properties": {
+                    "success": {"type": "boolean"},
+                    "subscription_id": {"type": "string"}
+                }
+            }
+        },
+
+        "400": {
+            "description": "Bad request - Validation errors",
+            "schema": {"$ref": "#/definitions/Error"}
+        },
+        "500": {
+            "description": "Internal server error",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "description": "Error message"
+                    }
+                }
+            }
+        }
+    }
+}

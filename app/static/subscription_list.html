@@ -1,1 +1,123 @@
-<!-- Static HTML for subscription list -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Subscriptions</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">All Subscriptions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button id="refreshBtn" class="btn btn-secondary">Refresh List</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="subsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Phone Number</th>
+                                    <th>Email</th>
+                                    <th>Child Name</th>
+                                    <th>Parent Name</th>
+                                    <th>Agreed/Refused</th>
+                                    <th>Package</th>
+                                    <th>Date of Subscription</th>
+                                    <th>Renew By</th>
+                                    <th>Payment Status</th>
+                                    <th>Area</th>
+                                    <th>Location</th>
+                                    <th>Cell</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subsBody">
+                                <!-- Data will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <nav>
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Pagination will be inserted here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const apiBase = '/api/public';
+let currentPage = 1;
+let perPage = 20;
+
+function fetchSubscriptions(page = 1) {
+    fetch(`${apiBase}/subscriptions?page=${page}&per_page=${perPage}`)
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('subsBody');
+            tbody.innerHTML = '';
+            if (data.subscriptions && data.subscriptions.length > 0) {
+                data.subscriptions.forEach((sub, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${(page-1)*perPage + idx + 1}</td>
+                        <td>${sub.phone_number || ''}</td>
+                        <td>${sub.email || ''}</td>
+                        <td>${sub.child_name || ''}</td>
+                        <td>${sub.parent_name || ''}</td>
+                        <td>${sub.agreed_refused || ''}</td>
+                        <td>${sub.package || ''}</td>
+                        <td>${sub.date_of_subscription || ''}</td>
+                        <td>${sub.renew_subscription_by || ''}</td>
+                        <td>${sub.payment_status || ''}</td>
+                        <td>${sub.area || ''}</td>
+                        <td>${sub.location || ''}</td>
+                        <td>${sub.cell || ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="13" class="text-center">No subscriptions found.</td>`;
+                tbody.appendChild(tr);
+            }
+            renderPagination(data.page, data.total_pages);
+        });
+}
+
+function renderPagination(current, total) {
+    const pag = document.getElementById('pagination');
+    pag.innerHTML = '';
+    if (total <= 1) return;
+    for (let i = 1; i <= total; i++) {
+        const li = document.createElement('li');
+        li.className = 'page-item' + (i === current ? ' active' : '');
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.href = '#';
+        a.textContent = i;
+        a.onclick = (e) => {
+            e.preventDefault();
+            currentPage = i;
+            fetchSubscriptions(i);
+        };
+        li.appendChild(a);
+        pag.appendChild(li);
+    }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', () => fetchSubscriptions(currentPage));
+
+// Initial fetch
+fetchSubscriptions();
+</script>
+</body>
+</html>

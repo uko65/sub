@@ -2,8 +2,30 @@ from flask import Blueprint, request, jsonify, current_app
 from app.models import Subscription, Package
 from app.models.geography import get_kigali_districts, get_sectors_by_district, get_cells_by_sector
 from datetime import datetime
-
+from app.models.user import User
 public_bp = Blueprint('public', __name__)
+
+# JSON export endpoints for all tables (must be after public_bp definition)
+@public_bp.route('/users.json', methods=['GET'])
+def export_users_json():
+    """Export all users as JSON (public, for browser download)"""
+    user_model = User(current_app.db.db)
+    users = user_model.get_all_users(page=1, per_page=10000)['users']
+    return jsonify(users), 200
+
+@public_bp.route('/packages.json', methods=['GET'])
+def export_packages_json():
+    """Export all packages as JSON (public, for browser download)"""
+    package_model = Package(current_app.db.db)
+    packages = package_model.get_all_packages(include_inactive=True)
+    return jsonify(packages), 200
+
+@public_bp.route('/subscriptions.json', methods=['GET'])
+def export_subscriptions_json():
+    """Export all subscriptions as JSON (public, for browser download)"""
+    subscription_model = Subscription(current_app.db.db)
+    result = subscription_model.get_all_subscriptions(filters=None, page=1, per_page=10000)
+    return jsonify(result['subscriptions']), 200
 
 # Package routes
 @public_bp.route('/packages', methods=['GET'])

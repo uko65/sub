@@ -1,1 +1,122 @@
-<!-- Static HTML for subscription form -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Form (with JSON Export)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Subscription Form</h4>
+                </div>
+                <div class="card-body">
+                    <form id="subscriptionForm">
+                        <div class="mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="+2507XXXXXXXX" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="child_name" class="form-label">Child Name</label>
+                            <input type="text" class="form-control" id="child_name" name="child_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="parent_name" class="form-label">Parent/Guardian Name</label>
+                            <input type="text" class="form-control" id="parent_name" name="parent_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="agreed_refused" class="form-label">Agreement</label>
+                            <select class="form-select" id="agreed_refused" name="agreed_refused" required>
+                                <option value="">Select...</option>
+                                <option value="Agreed">Agreed</option>
+                                <option value="Refused">Refused</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="package" class="form-label">Package</label>
+                            <input type="text" class="form-control" id="package" name="package" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="date_of_subscription" class="form-label">Date of Subscription</label>
+                            <input type="date" class="form-control" id="date_of_subscription" name="date_of_subscription" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="renew_subscription_by" class="form-label">Renew Subscription By</label>
+                            <input type="date" class="form-control" id="renew_subscription_by" name="renew_subscription_by" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_status" class="form-label">Payment Status</label>
+                            <select class="form-select" id="payment_status" name="payment_status" required>
+                                <option value="Pending" selected>Pending</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="area" class="form-label">District</label>
+                            <input type="text" class="form-control" id="area" name="area" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Sector</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cell" class="form-label">Cell (optional)</label>
+                            <input type="text" class="form-control" id="cell" name="cell">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Submit Subscription</button>
+                        <button type="button" id="exportJsonBtn" class="btn btn-success w-100">Export as JSON</button>
+                    </form>
+                    <div id="formAlert" class="alert mt-3 d-none" role="alert"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// Auto-calculate renew_subscription_by when date_of_subscription changes
+document.getElementById('date_of_subscription').addEventListener('change', function() {
+    const dateStr = this.value;
+    if (!dateStr) {
+        document.getElementById('renew_subscription_by').value = '';
+        return;
+    }
+    const date = new Date(dateStr);
+    date.setDate(date.getDate() + 30);
+    // Format as yyyy-mm-dd
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    document.getElementById('renew_subscription_by').value = `${yyyy}-${mm}-${dd}`;
+});
+
+// Export form data as JSON file
+document.getElementById('exportJsonBtn').addEventListener('click', function() {
+    const form = document.getElementById('subscriptionForm');
+    const data = Object.fromEntries(new FormData(form).entries());
+    // Remove empty cell
+    if (!data.cell) delete data.cell;
+    // Remove renew_subscription_by if empty
+    if (!data.renew_subscription_by) delete data.renew_subscription_by;
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'subscription.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>

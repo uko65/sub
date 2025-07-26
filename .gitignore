@@ -1,3 +1,55 @@
+# Project/deployment config files
+*.conf
+*.service
+*.json
+deploy.sh
+nginx.conf
+gunicorn.service
+setup_fake_data.py
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+
+# Redis dump
+*.rdb
+
+# MongoDB dump
+*.wt
+*.ns
+*.0
+*.1
+*.2
+*.3
+*.4
+*.5
+*.6
+*.7
+*.8
+*.9
+*.log
+*.lock
+*.wt
+*.snappy
+*.lz4
+*.zst
+
+# Misc
+*.bak
+*.swp
+*.swo
+*.tmp
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
