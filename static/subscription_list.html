@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Subscription List</title>
+</head>
+<body>
+  <h2>All Subscriptions</h2>
+  <button onclick="loadSubscriptions()">Load Subscriptions</button>
+  <div id="result"></div>
+  <table id="subsTable" border="1" style="margin-top:20px;">
+    <thead>
+      <tr>
+        <th>Phone</th><th>Email</th><th>Child Name</th><th>Parent Name</th><th>Agreed/Refused</th><th>Package</th><th>Date</th><th>Renew By</th><th>Payment</th><th>Area</th><th>Location</th><th>Cell</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    async function loadSubscriptions() {
+      const res = await fetch('/api/public/subscriptions');
+      const resultDiv = document.getElementById('result');
+      if (res.ok) {
+        const data = await res.json();
+        const tbody = document.querySelector('#subsTable tbody');
+        tbody.innerHTML = '';
+        data.subscriptions.forEach(sub => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${sub.phone_number||''}</td><td>${sub.email||''}</td><td>${sub.child_name||''}</td><td>${sub.parent_name||''}</td><td>${sub.agreed_refused||''}</td><td>${sub.package||''}</td><td>${sub.date_of_subscription||''}</td><td>${sub.renew_subscription_by||''}</td><td>${sub.payment_status||''}</td><td>${sub.area||''}</td><td>${sub.location||''}</td><td>${sub.cell||''}</td>`;
+          tbody.appendChild(tr);
+        });
+        resultDiv.innerText = `Total: ${data.total}`;
+      } else {
+        resultDiv.innerText = 'Failed to load subscriptions.';
+      }
+    }
+  </script>
+</body>
+</html>

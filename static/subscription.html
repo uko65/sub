@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>New Subscription</title>
+  <script>
+    // Prevent non-numeric input for phone number
+    function onlyNumbers(e) {
+      const char = String.fromCharCode(e.which);
+      if (!/[0-9]/.test(char)) {
+        e.preventDefault();
+      }
+    }
+    // Validate email format
+    function validateEmail(email) {
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    }
+    // Validate date format (YYYY-MM-DD)
+    function validateDate(date) {
+      return /^\d{4}-\d{2}-\d{2}$/.test(date);
+    }
+  </script>
+</head>
+<body>
+  <h2>Create Subscription</h2>
+  <form id="subscriptionForm">
+    <input type="text" name="phone_number" placeholder="Phone number" required maxlength="12" onkeypress="onlyNumbers(event)"><br>
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="text" name="child_name" placeholder="Child's name" required><br>
+    <input type="text" name="parent_name" placeholder="Parent name" required><br>
+    <select name="agreed_refused" required>
+      <option value="Agreed">Agreed</option>
+      <option value="Refused">Refused</option>
+    </select><br>
+    <select name="package" id="package" required>
+      <option value="">Select Package</option>
+    </select><br>
+    <input type="date" name="date_of_subscription" required><br>
+    <select name="area" id="area" required>
+      <option value="">Select Area (District)</option>
+    </select><br>
+    <select name="location" id="location" required>
+      <option value="">Select Location (Sector)</option>
+    </select><br>
+    <select name="cell" id="cell">
+      <option value="">Select Cell (optional)</option>
+    </select><br>
+    <select name="payment_status">
+      <option value="">Select Payment Status (optional)</option>
+      <option value="Pending">Pending</option>
+      <option value="Paid">Paid</option>
+      <option value="Failed">Failed</option>
+    </select><br>
+    <input type="text" id="token" placeholder="JWT Access Token" required><br>
+    <button type="submit">Submit</button>
+  </form>
+  <div id="result"></div>
+  <script>
+    // Helper to load all dropdowns
+    async function loadDropdowns() {
+      await loadAreas();
+      await loadPackages();
+    }
+    // Populate Package dropdown (public, no token needed)
+    async function loadPackages() {
+      const res = await fetch('/api/public/packages');
+      if (res.ok) {
+        const data = await res.json();
+        const packageSelect = document.getElementById('package');
+        packageSelect.innerHTML = '<option value="">Select Package</option>';
+        data.packages.forEach(pkg => {
+          const opt = document.createElement('option');
+          opt.value = pkg.name;
+          opt.textContent = pkg.name;
+          packageSelect.appendChild(opt);
+        });
+      }
+    }
+    // Populate Area dropdown (public, no token needed)
+    async function loadAreas() {
+      const res = await fetch('/api/public/districts');
+      if (res.ok) {
+        const data = await res.json();
+        const areaSelect = document.getElementById('area');
+        areaSelect.innerHTML = '<option value="">Select Area (District)</option>';
+        data.districts.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d;
+          opt.textContent = d;
+          areaSelect.appendChild(opt);
+        });
+      }
+    }
+    // Populate Location dropdown based on selected Area (public)
+    document.getElementById('area').onchange = async function() {
+      const area = this.value;
+      const locationSelect = document.getElementById('location');
+      locationSelect.innerHTML = '<option value="">Select Location (Sector)</option>';
+      if (area) {
+        const res = await fetch('/api/public/sectors/' + area);
+        if (res.ok) {
+          const data = await res.json();
+          data.sectors.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            locationSelect.appendChild(opt);
+          });
+        }
+      }
+      // Clear cell dropdown when area changes
+      document.getElementById('cell').innerHTML = '<option value="">Select Cell (optional)</option>';
+    };
+    // Populate Cell dropdown based on selected Area and Location (public)
+    document.getElementById('location').onchange = async function() {
+      const area = document.getElementById('area').value;
+      const location = this.value;
+      const cellSelect = document.getElementById('cell');
+      cellSelect.innerHTML = '<option value="">Select Cell (optional)</option>';
+      if (area && location) {
+        const res = await fetch(`/api/public/cells/${area}/${location}`);
+        if (res.ok) {
+          const data = await res.json();
+          data.cells.forEach(cell => {
+            const opt = document.createElement('option');
+            opt.value = cell;
+            opt.textContent = cell;
+            cellSelect.appendChild(opt);
+          });
+        }
+      }
+    };
+    // Load dropdowns on page load
+    window.onload = function() {
+      loadDropdowns();
+    };
+    // Submit form with validation
+    document.getElementById('subscriptionForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      // Client-side validation
+      const phone = form.phone_number.value;
+      const email = form.email.value;
+      const date = form.date_of_subscription.value;
+      if (!/^[0-9]{8,12}$/.test(phone)) {
+        document.getElementById('result').innerText = 'Phone number must be 8-12 digits.';
+        return;
+      }
+      if (!validateEmail(email)) {
+        document.getElementById('result').innerText = 'Invalid email format.';
+        return;
+      }
+      if (!date) {
+        document.getElementById('result').innerText = 'Date of subscription is required.';
+        return;
+      }
+      const data = {
+        phone_number: phone,
+        email: email,
+        child_name: form.child_name.value,
+        parent_name: form.parent_name.value,
+        agreed_refused: form.agreed_refused.value,
+        package: form.package.value,
+        date_of_subscription: date,
+        area: form.area.value,
+        location: form.location.value,
+        cell: form.cell.value,
+        payment_status: form.payment_status.value
+      };
+      const token = document.getElementById('token').value;
+      const res = await fetch('/api/subscriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+      });
+      document.getElementById('result').innerText = await res.text();
+    };
+  </script>
+</body>
+</html>

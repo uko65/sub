@@ -1,0 +1,27 @@
+# Flask and core dependencies
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# Database
+Flask-PyMongo==2.3.0
+pymongo==4.5.0
+
+# Authentication
+Flask-JWT-Extended==4.5.2
+bcrypt==4.0.1
+
+# Session management
+Flask-Session==0.5.0
+redis==4.6.0
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# Development dependencies (optional)
+pytest==7.4.2
+pytest-flask==1.2.0
+coverage==7.3.2
+
+# Production dependencies (optional)
+gunicorn==21.2.0
+eventlet==0.33.3

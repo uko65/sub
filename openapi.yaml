@@ -1,0 +1,261 @@
+openapi: 3.0.0
+info:
+  title: Child Subscription API
+  version: 1.0.0
+  description: |
+    API for managing child subscriptions, packages, users, and geographic data. Supports both authenticated and public access.
+servers:
+  - url: http://localhost:5000
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user_id:
+                    type: string
+  /api/auth/login:
+    post:
+      summary: Login and receive JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  user:
+                    type: object
+  /api/auth/refresh:
+    post:
+      summary: Refresh access token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+  /api/public/packages:
+    get:
+      summary: Get all packages (public)
+      responses:
+        '200':
+          description: List of packages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      type: object
+  /api/packages:
+    post:
+      summary: Create new package (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                price:
+                  type: number
+      responses:
+        '201':
+          description: Package created
+    get:
+      summary: Get all packages (JWT required)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of packages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      type: object
+  /api/public/subscriptions:
+    post:
+      summary: Create new subscription (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone_number:
+                  type: string
+                email:
+                  type: string
+                child_name:
+                  type: string
+                parent_name:
+                  type: string
+                agreed_refused:
+                  type: string
+                package:
+                  type: string
+                date_of_subscription:
+                  type: string
+                area:
+                  type: string
+                location:
+                  type: string
+                cell:
+                  type: string
+                payment_status:
+                  type: string
+      responses:
+        '201':
+          description: Subscription created
+    get:
+      summary: Get all subscriptions (public)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/public/districts:
+    get:
+      summary: Get list of districts (public)
+      responses:
+        '200':
+          description: List of districts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  districts:
+                    type: array
+                    items:
+                      type: string
+  /api/public/sectors/{district}:
+    get:
+      summary: Get sectors for a district (public)
+      parameters:
+        - in: path
+          name: district
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of sectors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  district:
+                    type: string
+                  sectors:
+                    type: array
+                    items:
+                      type: string
+  /api/public/cells/{district}/{sector}:
+    get:
+      summary: Get cells for a sector (public)
+      parameters:
+        - in: path
+          name: district
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: sector
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of cells
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  district:
+                    type: string
+                  sector:
+                    type: string
+                  cells:
+                    type: array
+                    items:
+                      type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

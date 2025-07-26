@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redis & Session Test</title>
+</head>
+<body>
+  <h2>Test Redis Token Storage</h2>
+  <input type="text" id="user_id" placeholder="User ID" required>
+  <button onclick="checkToken()">Check Token in Redis</button>
+  <div id="result"></div>
+  <h2>Test Session Storage</h2>
+  <button onclick="setSession()">Set Session Value</button>
+  <button onclick="getSession()">Get Session Value</button>
+  <div id="sessionResult"></div>
+  <h2>Test Cookies</h2>
+  <button onclick="setCookie()">Set Cookie</button>
+  <div id="cookieResult"></div>
+  <script>
+    async function checkToken() {
+      const userId = document.getElementById('user_id').value;
+      const res = await fetch(`/api/debug/redis-token/${userId}`);
+      document.getElementById('result').innerText = await res.text();
+    }
+    async function setSession() {
+      const res = await fetch('/api/debug/session-set');
+      document.getElementById('sessionResult').innerText = await res.text();
+    }
+    async function getSession() {
+      const res = await fetch('/api/debug/session-get');
+      document.getElementById('sessionResult').innerText = await res.text();
+    }
+    async function setCookie() {
+      const res = await fetch('/api/debug/set-cookie');
+      document.getElementById('cookieResult').innerText = await res.text();
+      // Show cookies
+      document.getElementById('cookieResult').innerText += '\nCookies: ' + document.cookie;
+    }
+    // Show cookies on page load
+    window.onload = function() {
+      document.getElementById('cookieResult').innerText = 'Cookies: ' + document.cookie;
+    };
+  </script>
+</body>
+</html>

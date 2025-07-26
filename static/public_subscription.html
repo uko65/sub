@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Public Subscription</title>
+</head>
+<body>
+  <h2>Register Child Subscription (No Login Required)</h2>
+  <form id="publicSubscriptionForm">
+    <input type="text" name="phone_number" placeholder="Phone number" required maxlength="12" pattern="[0-9]+"><br>
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="text" name="child_name" placeholder="Child's name" required><br>
+    <input type="text" name="parent_name" placeholder="Parent name" required><br>
+    <select name="agreed_refused" required>
+      <option value="Agreed">Agreed</option>
+      <option value="Refused">Refused</option>
+    </select><br>
+    <select name="package" id="package" required>
+      <option value="">Select Package</option>
+    </select><br>
+    <input type="date" name="date_of_subscription" required><br>
+    <select name="area" id="area" required>
+      <option value="">Select Area (District)</option>
+    </select><br>
+    <select name="location" id="location" required>
+      <option value="">Select Location (Sector)</option>
+    </select><br>
+    <select name="cell" id="cell">
+      <option value="">Select Cell (optional)</option>
+    </select><br>
+    <select name="payment_status">
+      <option value="">Select Payment Status (optional)</option>
+      <option value="Pending">Pending</option>
+      <option value="Paid">Paid</option>
+      <option value="Failed">Failed</option>
+    </select><br>
+    <button type="submit">Submit</button>
+  </form>
+  <div id="result"></div>
+  <script>
+    // Populate Package dropdown from backend
+    async function loadPackages() {
+      const res = await fetch('/api/public/packages');
+      if (res.ok) {
+        const data = await res.json();
+        const packageSelect = document.getElementById('package');
+        packageSelect.innerHTML = '<option value="">Select Package</option>';
+        data.packages.forEach(pkg => {
+          const opt = document.createElement('option');
+          opt.value = pkg.name;
+          opt.textContent = pkg.name;
+          packageSelect.appendChild(opt);
+        });
+      }
+    }
+    // Populate Area dropdown from backend
+    async function loadAreas() {
+      const res = await fetch('/api/public/districts');
+      if (res.ok) {
+        const data = await res.json();
+        const areaSelect = document.getElementById('area');
+        areaSelect.innerHTML = '<option value="">Select Area (District)</option>';
+        data.districts.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d;
+          opt.textContent = d;
+          areaSelect.appendChild(opt);
+        });
+      }
+    }
+    // Populate Location dropdown based on selected Area
+    document.getElementById('area').onchange = async function() {
+      const area = this.value;
+      const locationSelect = document.getElementById('location');
+      locationSelect.innerHTML = '<option value="">Select Location (Sector)</option>';
+      if (area) {
+        const res = await fetch('/api/public/sectors/' + area);
+        if (res.ok) {
+          const data = await res.json();
+          data.sectors.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            locationSelect.appendChild(opt);
+          });
+        }
+      }
+      document.getElementById('cell').innerHTML = '<option value="">Select Cell (optional)</option>';
+    };
+    // Populate Cell dropdown based on selected Area and Location
+    document.getElementById('location').onchange = async function() {
+      const area = document.getElementById('area').value;
+      const location = this.value;
+      const cellSelect = document.getElementById('cell');
+      cellSelect.innerHTML = '<option value="">Select Cell (optional)</option>';
+      if (area && location) {
+        const res = await fetch(`/api/public/cells/${area}/${location}`);
+        if (res.ok) {
+          const data = await res.json();
+          data.cells.forEach(cell => {
+            const opt = document.createElement('option');
+            opt.value = cell;
+            opt.textContent = cell;
+            cellSelect.appendChild(opt);
+          });
+        }
+      }
+    };
+    window.onload = function() {
+      loadAreas();
+      loadPackages();
+    };
+    document.getElementById('publicSubscriptionForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        phone_number: form.phone_number.value,
+        email: form.email.value,
+        child_name: form.child_name.value,
+        parent_name: form.parent_name.value,
+        agreed_refused: form.agreed_refused.value,
+        package: form.package.value,
+        date_of_subscription: form.date_of_subscription.value,
+        area: form.area.value,
+        location: form.location.value,
+        cell: form.cell.value,
+        payment_status: form.payment_status.value
+      };
+      const res = await fetch('/api/public/subscriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      document.getElementById('result').innerText = await res.text();
+    };
+  </script>
+</body>
+</html>
